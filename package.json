@@ -1,6 +1,8 @@
 {
   "name": "yudzxml-api",
   "version": "1.0.0",
+  "description": "API MULTI V2 BY YUDZXML",
+  "type": "commonjs",
   "engines": {
     "node": "22.x"
   },
@@ -8,5 +10,7 @@
     "axios": "^1.4.0",
     "canvas": "^2.11.2",
     "form-data": "^4.0.0"
-  }
+  },
+  "author": "Yudzxml",
+  "license": "MIT"
 }
