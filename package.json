@@ -7,9 +7,7 @@
     "node": "20.x"
   },
   "dependencies": {
-    "axios": "^1.4.0",
-    "canvas": "^2.11.2",
-    "form-data": "^4.0.0"
+    "axios": "^1.4.0"
   },
   "author": "Yudzxml",
   "license": "MIT"
