@@ -310,7 +310,7 @@ const anichin = {
       console.error("Error scraping:", err.message);
       return [];
     }
-  }
+  },
   info: async (url) => {
   try {
     const { data: html } = await axios.get(url, {
