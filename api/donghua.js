@@ -311,6 +311,85 @@ const anichin = {
       return [];
     }
   }
+  info: async (url) => {
+  try {
+    const { data: html } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                      '(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+      }
+    });
+
+    const $ = cheerio.load(html);
+
+    // ----- Judul -----
+    // Dari atribut title gambar
+    const imgEl = $('.thumb img[itemprop="image"]');
+    const title = imgEl.length ? imgEl.attr('title') || '' : '';
+
+    // Judul alternatif
+    const titleAlt = $('.alter').text().trim();
+
+    // ----- Info dasar -----
+    const info = {};
+    $('.info-content .spe span').each((i, el) => {
+      const key = $(el).find('b').text().replace(':','').trim();
+      const value = $(el).text().replace($(el).find('b').text(),'').trim();
+      if (key) info[key] = value;
+    });
+
+    // ----- Genres -----
+    const genres = [];
+    $('.genxed a').each((i, el) => {
+      genres.push($(el).text().trim());
+    });
+
+    // ----- Thumbnail -----
+    const Thumb = $('.thumb img').attr('src') || '';
+    const mainThumb = $('.ime img').attr('src') || '';
+
+    // ----- Rating -----
+    const ratingText = $('.rt .rating strong').text().trim();
+    const rating = ratingText ? parseFloat(ratingText.replace('Rating','').trim()) : null;
+
+    // ----- Episode list -----
+    const episodes = [];
+    $('li[data-index]').each((i, el) => {
+      const aTag = $(el).find('a');
+      const epNum = $(el).find('.epl-num').text().trim();
+      const epTitle = $(el).find('.epl-title').text().trim();
+      const epSub = $(el).find('.epl-sub span.status').text().trim();
+      const epDate = $(el).find('.epl-date').text().trim();
+      const epLink = aTag.attr('href');
+      episodes.push({ epNum, epTitle, epSub, epDate, epLink });
+    });
+
+    // ----- Sinopsis -----
+    let synopsis = '';
+    const synpDiv = $('.bixbox.synp .entry-content');
+    if (synpDiv.length) {
+      synpDiv.find('a').remove();
+      const fullText = synpDiv.text().trim().replace(/\s+/g, ' ');
+      synopsis = fullText.split(':')[0]; // ambil sampai tanda ':'
+    }
+
+    return {
+      title,
+      titleAlt,
+      info,
+      genres,
+      mainThumb,
+      Thumb,
+      rating,
+      synopsis,
+      episodes
+    };
+
+  } catch(err) {
+    console.error('Gagal parsing HTML:', err.message);
+    return null;
+  }
+ }
 }
 
 module.exports = async (req, res) => {
@@ -368,12 +447,20 @@ module.exports = async (req, res) => {
         if (!genre) return res.status(400).json({ error: 'Parameter "genre" wajib diisi untuk genres' });
         result = await anichin.genres(genre, page || 1);
         break;
+        case 'info':
+        if (!url) return res.status(400).json({ error: 'Parameter "url" wajib diisi untuk genres' });
+        result = await anichin.info(url);
+        break;
 
       default:
         return res.status(400).json({ error: `Action "${action}" tidak dikenal` });
     }
 
-    return res.status(200).json(result);
+    return res.status(200).json({
+      status: 200,
+      author: "Yudzxml",
+      result
+    });
 
   } catch (err) {
     console.error(err);
