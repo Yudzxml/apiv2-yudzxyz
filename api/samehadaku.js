@@ -252,14 +252,22 @@ const samehadaku = {
 
     // Ambil deskripsi
     let description = "";
-    const descDiv = $(".desc [itemprop='description']");
-    descDiv.find(".html-div").each((i, el) => {
+const descDiv = $(".desc [itemprop='description']");
+
+// Ambil semua .html-div jika ada
+descDiv.find(".html-div").each((i, el) => {
   const text = $(el).text().trim();
   if (text.length > 20 && !description.includes(text)) {
     description += text + "\n";
-    }
-  });
-    description = description.trim();
+  }
+});
+
+description = description.trim();
+
+// Fallback kalau kosong
+if (!description) {
+  description = $(".entry-content.entry-content-single p").text().trim();
+}
 
     // Ambil genre
     const genres = [];
