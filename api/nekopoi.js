@@ -223,7 +223,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (req.url === '?latest') {
+    if (req.url.endsWith('?latest')) {
       const data = await latest();
       return res.status(200).json({
         status: 200,
@@ -232,7 +232,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!query && !videoDetailUrl && req.url !== '?latest') {
+    if (!query && !videoDetailUrl && !req.url.endsWith('?latest')) {
       return res.status(400).json({
         status: 400,
         author: 'Yudzxml',
