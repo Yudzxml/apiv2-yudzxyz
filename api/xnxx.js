@@ -112,17 +112,26 @@ const download = async (videoUrl) => {
   try {
     const response = await axios.get(videoUrl, {
       headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
-        'Viewport-Width': '980',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+        'cache-control': 'no-cache',
+        'device-memory': '8',
+        'pragma': 'no-cache',
+        'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+        'sec-ch-ua-arch': '""',
+        'sec-ch-ua-bitness': '""',
+        'sec-ch-ua-full-version': '"139.0.7339.0"',
+        'sec-ch-ua-full-version-list': '"Chromium";v="139.0.7339.0", "Not;A=Brand";v="99.0.0.0"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-model': '"CPH2209"',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-ch-ua-platform-version': '"11.0.0"',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-site': 'none',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
+        'viewport-width': '980',
       },
     });
 
@@ -134,7 +143,7 @@ const download = async (videoUrl) => {
     const lowQualUrl = baseDiv.find('div').eq(1).find('a').attr('href') || null;
     const highQualUrl = baseDiv.find('div').eq(2).find('a').attr('href') || null;
 
-    return {
+    const result = {
       thumbnailUrl,
       lowQualUrl,
       highQualUrl
