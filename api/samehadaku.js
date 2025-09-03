@@ -10,7 +10,7 @@ const samehadaku = {
       // Request GET awal untuk ambil HTML dan cookie
       const response = await axios.get(url, {
         headers: {
-          "User -Agent":
+          "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36",
         },
       });
@@ -61,7 +61,7 @@ const samehadaku = {
               "X-Requested-With": "XMLHttpRequest",
               "Cookie": cookie,
               "Referer": url,
-              "User -Agent":
+              "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36",
             },
           }
