@@ -148,6 +148,8 @@ const download = async (videoUrl) => {
       lowQualUrl,
       highQualUrl
     };
+    
+    return result
   } catch (error) {
     console.error('Error fetching video details:', error);
     return null;
