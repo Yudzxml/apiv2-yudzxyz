@@ -203,9 +203,8 @@ module.exports = async (req, res) => {
   const { method } = req;
 
   if (method === 'GET') {
-    const { search: query, download: videoUrl, detail: videoDetailUrl, latest: latestEpisodes } = req.query;
+    const { search: query, detail: videoDetailUrl } = req.query;
 
-    // Endpoint for search
     if (query) {
       const data = await search(query);
       return res.status(200).json({
@@ -215,7 +214,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Endpoint for detailed video info
     if (videoDetailUrl) {
       const data = await detail(videoDetailUrl);
       return res.status(200).json({
@@ -225,8 +223,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Endpoint for latest episodes
-    if (latestEpisodes) {
+    if (req.url === '?latest') {
       const data = await latest();
       return res.status(200).json({
         status: 200,
@@ -235,12 +232,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    // If no valid parameter is passed
-    if (!query && !videoDetailUrl && !latestEpisodes) {
+    if (!query && !videoDetailUrl && req.url !== '?latest') {
       return res.status(400).json({
         status: 400,
         author: 'Yudzxml',
-        error: 'Parameter "search", "detail", atau "latest" wajib diisi.'
+        error: 'Parameter "search", "detail", atau "?latest" wajib diisi.'
       });
     }
 
