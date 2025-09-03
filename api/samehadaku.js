@@ -6,13 +6,24 @@ const samehadaku = {
   getLinkVideo: async function (url) {
     try {
       console.log("🔍 Fetching URL:", url);
-      const { data: html } = await axios.get(url, {
+
+      // Request GET awal untuk ambil HTML dan cookie
+      const response = await axios.get(url, {
         headers: {
-          "User-Agent":
+          "User -Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36",
         },
       });
+
+      const html = response.data;
+      const setCookieHeader = response.headers["set-cookie"] || [];
+      // Gabungkan cookie menjadi string untuk header
+      const cookie = setCookieHeader
+        .map((c) => c.split(";")[0])
+        .join("; ");
+
       console.log("✅ HTML fetched, length:", html.length);
+      console.log("🍪 Cookies obtained:", cookie);
 
       const $ = cheerio.load(html);
 
@@ -35,6 +46,7 @@ const samehadaku = {
       const streamResults = [];
       for (let s of servers) {
         console.log(`➡️ Requesting stream for server: ${s.label}`);
+
         const { data: ajaxResp } = await axios.post(
           `${this.base}/wp-admin/admin-ajax.php`,
           new URLSearchParams({
@@ -45,12 +57,16 @@ const samehadaku = {
           }).toString(),
           {
             headers: {
-              "Content-Type":
-                "application/x-www-form-urlencoded; charset=UTF-8",
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
               "X-Requested-With": "XMLHttpRequest",
+              "Cookie": cookie,
+              "Referer": url,
+              "User -Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36",
             },
           }
         );
+
         console.log(`📥 Response length for ${s.label}:`, ajaxResp.length);
 
         const match = ajaxResp.match(/<iframe[^>]+src="([^"]+)"/);
