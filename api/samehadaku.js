@@ -5,27 +5,36 @@ const samehadaku = {
   base: "https://v1.samehadaku.how",
   getLinkVideo: async function (url) {
     try {
+      console.log("🔍 Fetching URL:", url);
       const { data: html } = await axios.get(url, {
         headers: {
-          "User-Agent":
+          "User -Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115 Safari/537.36",
         },
       });
+      console.log("✅ HTML fetched, length:", html.length);
 
       const $ = cheerio.load(html);
 
       const servers = [];
       $(".east_player_option").each((i, el) => {
-        servers.push({
-          label: $(el).text().trim(),
-          post: $(el).attr("data-post"),
-          nume: $(el).attr("data-nume"),
-          type: $(el).attr("data-type"),
-        });
+        const post = $(el).attr("data-post");
+        const nume = $(el).attr("data-nume");
+        const type = $(el).attr("data-type");
+        if (post && nume && type) {
+          servers.push({
+            label: $(el).text().trim(),
+            post,
+            nume,
+            type,
+          });
+        }
       });
+      console.log("🎥 Found servers:", servers);
 
       const streamResults = [];
       for (let s of servers) {
+        console.log(`➡️ Requesting stream for server: ${s.label}`);
         const { data: ajaxResp } = await axios.post(
           `${this.base}/wp-admin/admin-ajax.php`,
           new URLSearchParams({
@@ -42,11 +51,15 @@ const samehadaku = {
             },
           }
         );
+        console.log(`📥 Response length for ${s.label}:`, ajaxResp.length);
 
         const match = ajaxResp.match(/<iframe[^>]+src="([^"]+)"/);
+        const streamUrl = match ? match[1] : null;
+        console.log(`🔗 Stream URL for ${s.label}:`, streamUrl);
+
         streamResults.push({
           quality: s.label,
-          url: match ? match[1] : null,
+          url: streamUrl,
         });
       }
 
@@ -55,6 +68,7 @@ const samehadaku = {
       $(".download-eps").each((i, el) => {
         const type = $(el).find("p b").text().trim();
         downloads[type] = downloads[type] || {};
+        console.log(`📂 Download type found: ${type}`);
 
         $(el)
           .find("ul li")
@@ -68,8 +82,11 @@ const samehadaku = {
                 if (url) urls.push(url);
               });
             downloads[type][quality] = urls;
+            console.log(`  - Quality: ${quality}, URLs:`, urls);
           });
       });
+
+      console.log("✅ Finished parsing streams and downloads");
 
       return {
         streams: streamResults,
