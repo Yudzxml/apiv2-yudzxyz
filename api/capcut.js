@@ -28,44 +28,52 @@ async function capcut(url) {
     });
 
     const apiData = await apiResponse.json();
-    return apiData
+    if (!apiData.status) {
+      apiData.status = 200;
+    }
+
+    return apiData;
 
   } catch (error) {
     console.error('Error occurred:', error);
+    return { status: 500, error: error.message };
   }
 }
 
 module.exports = async (req, res) => {
-    console.info('New request:', req.method, req.query);
+  console.info('New request:', req.method, req.query);
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method === 'OPTIONS') return res.status(204).end();
 
-    if (req.method !== 'GET') {
-        res.setHeader('Allow', 'GET, OPTIONS');
-        return res.status(405).json({
-            author: "Yudzxml",
-            status: 405,
-            error: `Method ${req.method} Not Allowed`,
-        });
-    }
-
-    const { url } = req.query;
-    if (!url) {
-        return res.status(400).json({
-            author: "Yudzxml",
-            status: 400,
-            error: 'Parameter "url" wajib diisi',
-        });
-    }
-
-    const result = await capcut(url);
-    return res.status(result.status).json({
-        status: 200,
-        author: "Yudzxml",
-        data: result
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET, OPTIONS');
+    return res.status(405).json({
+      author: "Yudzxml",
+      status: 405,
+      error: `Method ${req.method} Not Allowed`,
     });
+  }
+
+  const { url } = req.query;
+  if (!url) {
+    return res.status(400).json({
+      author: "Yudzxml",
+      status: 400,
+      error: 'Parameter "url" wajib diisi',
+    });
+  }
+
+  const result = await capcut(url);
+
+  const statusCode = result.status || 500;
+
+  return res.status(statusCode).json({
+    status: 200,
+    author: "Yudzxml",
+    data: result,
+  });
 };
