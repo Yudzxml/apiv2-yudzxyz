@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
     try {
       // Ambil data JSON dari URL
-      const url = 'https://raw.githubusercontent.com/Yudzxml/UploaderV2/main/tmp/eceb970d.json';
+      const url = 'https://raw.githubusercontent.com/Yudzxml/UploaderV2/main/tmp/48eca072.json';
       const response = await axios.get(url);
       const data = response.data;
 
