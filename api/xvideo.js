@@ -68,7 +68,7 @@ async function search(query) {
 }
 async function detail(videoUrl) {
   try {
-    const response = await fetch(url, {
+    const response = await fetch(videoUrl, {
       "headers": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -90,7 +90,7 @@ async function detail(videoUrl) {
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1",
         "viewport-width": "980",
-        "Referer": url,
+        "Referer": videoUrl,
         "Referrer-Policy": "no-referrer-when-downgrade"
       },
       "method": "GET"
@@ -104,7 +104,9 @@ async function detail(videoUrl) {
     const $ = cheerio.load(html);
 
     const jsonData = $('script[type="application/ld+json"]').html();
+
     const videoMetadata = JSON.parse(jsonData);
+    
     return videoMetadata;
   } catch (error) {
     console.error('Error:', error);
