@@ -1,4 +1,4 @@
-const axios = require('axios');
+
 
 module.exports = async (req, res) => {
   // Set header CORS
@@ -25,8 +25,14 @@ module.exports = async (req, res) => {
       const response = await axios.get(url);
       const data = response.data;
 
+      // Pastikan data adalah objek
+      if (typeof data !== 'object' || data === null) {
+        return res.status(500).json({ error: 'Format data sumber tidak valid' });
+      }
+
       // Cek apakah category ada di data
-      if (!data.hasOwnProperty(category)) {
+      // Gunakan Object.prototype.hasOwnProperty.call untuk lebih aman
+      if (!Object.prototype.hasOwnProperty.call(data, category)) {
         return res.status(404).json({ error: `Kategori '${category}' tidak ditemukan` });
       }
 
