@@ -11,15 +11,19 @@ const lk21 = {
         "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
         "sec-ch-ua-mobile": "?1",
         "sec-ch-ua-platform": '"Android"',
-        "upgrade-insecure-requests": "1"
+        "upgrade-insecure-requests": "1",
       },
-      method: "GET"
+      referrerPolicy: "strict-origin-when-cross-origin",
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
     });
 
     const html = await res.text();
     const $ = cheerio.load(html);
 
     const movies = [];
+
     $("article[itemscope][itemtype='https://schema.org/Movie']").each((_, el) => {
       const title = $(el).find("h3.poster-title").text().trim();
       const relativeLink = $(el).find("a[itemprop='url']").attr("href");
@@ -47,39 +51,51 @@ const lk21 = {
         `https://search.lk21.party/search.php?s=${encodeURIComponent(query)}&page=${page}`,
         {
           headers: {
-            "accept": "application/json, text/plain, */*",
+            accept: "application/json, text/plain, */*",
+            "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
             "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
             "sec-ch-ua-mobile": "?1",
             "sec-ch-ua-platform": '"Android"',
-            "x-requested-with": "XMLHttpRequest"
+            "x-requested-with": "XMLHttpRequest",
           },
-          method: "GET"
+          referrer: "https://tv6.lk21official.cc/",
+          referrerPolicy: "strict-origin-when-cross-origin",
+          method: "GET",
+          mode: "cors",
+          credentials: "omit",
         }
       );
 
-      if (!response.ok) throw new Error(`❌ Fetch gagal: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`❌ Fetch gagal: ${response.status} ${response.statusText}`);
 
       const json = await response.json();
 
-      const modifiedData = json.data.map(item => ({
+      const modifiedData = json.data.map((item) => ({
         ...item,
         slug: BASE_URL + "/" + item.slug,
-        poster: BASE_URL_POSTER + "/" + item.poster
+        poster: BASE_URL_POSTER + "/" + item.poster,
       }));
 
       return {
         status: 200,
         ...json,
-        data: modifiedData
+        data: modifiedData,
       };
     } catch (err) {
-      return { status: 404, data: "Movie tidak ditemukan" };
+      return {
+        status: 404,
+        data: "Movie gada lekk",
+      };
     }
   },
 
   detail: async function (url) {
     if (!url) {
-      return { status: 404, data: "URL jangan kosong, ambil dari search/latest" };
+      return {
+        status: 404,
+        data: "Urlnya jangan kosong le, ambil dari search atau latest",
+      };
     }
 
     try {
@@ -88,26 +104,36 @@ const lk21 = {
           "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
           "sec-ch-ua-mobile": "?1",
           "sec-ch-ua-platform": '"Android"',
-          "upgrade-insecure-requests": "1"
+          "upgrade-insecure-requests": "1",
         },
-        method: "GET"
+        referrer: url,
+        referrerPolicy: "strict-origin-when-cross-origin",
+        method: "GET",
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
       const html = await response.text();
       const $ = cheerio.load(html);
 
       const title = $(".movie-info h1").text().trim();
-      const infoTags = $(".info-tag span").map((i, el) => $(el).text().trim()).get();
+      const infoTags = $(".info-tag span")
+        .map((i, el) => $(el).text().trim())
+        .get();
       const rating = infoTags[0] || null;
       const format = infoTags[1] || null;
       const resolution = infoTags[2] || null;
       const duration = infoTags[3] || null;
-      const genres = $(".tag-list .tag a").map((i, el) => $(el).text().trim()).get();
-      const downloadLink = $(".movie-action a.btn-small[href^='http']").attr("href") || null;
+      const genres = $(".tag-list .tag a")
+        .map((i, el) => $(el).text().trim())
+        .get();
+      const downloadLink =
+        $(".movie-action a.btn-small[href^='http']").attr("href") || null;
       const subtitle = $(".detail p:contains('Subtitle') a").text().trim() || null;
       const director = $(".detail p:contains('Sutradara') a").text().trim() || null;
-      const actors = $(".detail p:contains('Bintang Film') a").map((i, el) => $(el).text().trim()).get();
+      const actors = $(".detail p:contains('Bintang Film') a")
+        .map((i, el) => $(el).text().trim())
+        .get();
       const country = $(".detail p:contains('Negara') a").text().trim() || null;
       const synopsis = $(".synopsis").text().trim();
       const poster = $(".detail picture img").attr("src");
@@ -118,11 +144,11 @@ const lk21 = {
         streamList.push({
           name: $(el).data("server"),
           url: $(el).data("url"),
-          iframe: $(el).attr("href")
+          iframe: $(el).attr("href"),
         });
       });
 
-      return {
+      const yudzxml = {
         status: 200,
         data: {
           title,
@@ -139,14 +165,20 @@ const lk21 = {
           synopsis,
           poster,
           trailer,
-          streamList
-        }
+          streamList,
+        },
       };
+
+      return JSON.stringify(yudzxml, null, 2);
     } catch (err) {
-      return { status: 500, data: "Webnya mokad atau domain sudah ganti" };
+      return {
+        status: 500,
+        data: "Webnya mokad le klo ga domainya udh di ganti",
+      };
     }
-  }
+  },
 };
+
 
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -156,7 +188,7 @@ module.exports = async (req, res) => {
   const { method } = req;
 
   if (method === "GET") {
-    const { search, latest, detail, page = 1 } = req.query;
+    const { search, latest, detail, page = 1, url } = req.query;
 
     try {
       if (search) {
@@ -170,7 +202,7 @@ module.exports = async (req, res) => {
       }
 
       if (detail) {
-        const data = await lk21.detail(detail);
+        const data = await lk21.detail(url);
         return res.status(200).json({ status: 200, author: "Yudzxml", ...data });
       }
 
