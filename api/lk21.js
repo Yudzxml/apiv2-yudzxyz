@@ -7,51 +7,61 @@ const lk21 = {
   latest: async function (page = 1) {
     const url = `${BASE_URL}/latest/page/${page}`;
     try {
-    const res = await fetch(url, {
-      headers: {
-        "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
-        "sec-ch-ua-mobile": "?1",
-        "sec-ch-ua-platform": '"Android"',
-        "upgrade-insecure-requests": "1",
-      },
-      referrerPolicy: "strict-origin-when-cross-origin",
-      method: "GET",
-      mode: "cors",
-      credentials: "omit",
-    });
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
+          "sec-ch-ua-mobile": "?1",
+          "sec-ch-ua-platform": '"Android"',
+          "upgrade-insecure-requests": "1",
+          "user-agent":
+            "Mozilla/5.0 (Linux; Android 11; CPH2209) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36",
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+          "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+          "cache-control": "no-cache",
+          pragma: "no-cache",
+        },
+        referrer: url,
+        referrerPolicy: "strict-origin-when-cross-origin",
+        mode: "cors",
+        credentials: "omit",
+        redirect: "follow",
+      });
 
-    const html = await res.text();
-    const $ = cheerio.load(html);
+      const html = await res.text();
+      const $ = cheerio.load(html);
 
-    const movies = [];
+      const movies = [];
 
-    $("article[itemscope][itemtype='https://schema.org/Movie']").each((_, el) => {
-      const title = $(el).find("h3.poster-title").text().trim();
-      const relativeLink = $(el).find("a[itemprop='url']").attr("href");
-      const link = relativeLink ? BASE_URL + relativeLink : null;
-      const year = $(el).find("span.year").text().trim();
-      const rating = $(el).find("span[itemprop='ratingValue']").text().trim();
-      const genre = $(el).find("meta[itemprop='genre']").attr("content");
-      const duration = $(el).find("span.duration").text().trim();
-      const image = $(el).find("img[itemprop='image']").attr("src");
+      $("article[itemscope][itemtype='https://schema.org/Movie']").each((_, el) => {
+        const title = $(el).find("h3.poster-title").text().trim();
+        const relativeLink = $(el).find("a[itemprop='url']").attr("href");
+        const link = relativeLink ? BASE_URL + relativeLink : null;
+        const year = $(el).find("span.year").text().trim();
+        const rating = $(el).find("span[itemprop='ratingValue']").text().trim();
+        const genre = $(el).find("meta[itemprop='genre']").attr("content");
+        const duration = $(el).find("span.duration").text().trim();
+        const image = $(el).find("img[itemprop='image']").attr("src");
 
-      movies.push({ title, link, year, rating, genre, duration, image });
-    });
+        movies.push({ title, link, year, rating, genre, duration, image });
+      });
 
-    const paginationText = $("h3").first().text().trim();
-    const match = paginationText.match(/Halaman\s+(\d+)\s+dari\s+(\d+)/i);
-    const currentPage = match ? parseInt(match[1]) : page;
-    const totalPages = match ? parseInt(match[2]) : null;
+      const paginationText = $("h3").first().text().trim();
+      const match = paginationText.match(/Halaman\s+(\d+)\s+dari\s+(\d+)/i);
+      const currentPage = match ? parseInt(match[1]) : page;
+      const totalPages = match ? parseInt(match[2]) : null;
 
-    return { currentPage, totalPages, movies };
-  } catch (err) {
-    console.log(err)
+      return { currentPage, totalPages, movies };
+    } catch (err) {
+      console.log(err);
       return {
         status: 500,
         data: "Webnya mokad le klo ga domainya udh di ganti",
       };
     }
   },
+
   search: async function (query = "", page = 1) {
     try {
       const response = await fetch(
@@ -90,13 +100,14 @@ const lk21 = {
         data: modifiedData,
       };
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return {
         status: 404,
         data: "Movie gada lekk",
       };
     }
   },
+
   detail: async function (url) {
     if (!url) {
       return {
@@ -107,15 +118,22 @@ const lk21 = {
 
     try {
       const response = await fetch(url, {
+        method: "GET",
         headers: {
           "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
           "sec-ch-ua-mobile": "?1",
           "sec-ch-ua-platform": '"Android"',
           "upgrade-insecure-requests": "1",
+          "user-agent":
+            "Mozilla/5.0 (Linux; Android 11; CPH2209) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36",
+          accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9,id;q=0.8",
+          "cache-control": "no-cache",
+          pragma: "no-cache",
         },
         referrer: url,
         referrerPolicy: "strict-origin-when-cross-origin",
-        method: "GET",
       });
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -155,7 +173,7 @@ const lk21 = {
         });
       });
 
-      const yudzxml = {
+      return {
         status: 200,
         data: {
           title,
@@ -175,10 +193,8 @@ const lk21 = {
           streamList,
         },
       };
-
-      return JSON.stringify(yudzxml, null, 2);
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return {
         status: 500,
         data: "Webnya mokad le klo ga domainya udh di ganti",
