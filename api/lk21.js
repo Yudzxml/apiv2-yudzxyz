@@ -196,28 +196,40 @@ module.exports = async (req, res) => {
   const { method } = req;
 
   if (method === "GET") {
-    const { search, latest, detail, page = 1, url } = req.query;
+    const { action, query, page = 1, url } = req.query;
 
     try {
-      if (search) {
-        const data = await lk21.search(search, page);
-        return res.status(200).json({ status: 200, author: "Yudzxml", ...data });
+      let data;
+      switch (action) {
+        case "search":
+          if (!query) {
+            return res.status(400).json({ status: 400, author: "Yudzxml", error: "Parameter 'query' diperlukan untuk action search." });
+          }
+          data = await lk21.search(query, page);
+          break;
+
+        case "latest":
+          data = await lk21.latest(page);
+          break;
+
+        case "detail":
+          if (!url) {
+            return res.status(400).json({ status: 400, author: "Yudzxml", error: "Parameter 'url' diperlukan untuk action detail." });
+          }
+          data = await lk21.detail(url);
+          break;
+
+        default:
+          return res.status(400).json({
+            status: 400,
+            author: "Yudzxml",
+            error: 'Gunakan query "action=search|latest|detail".'
+          });
       }
 
-      if (latest) {
-        const data = await lk21.latest(page);
-        return res.status(200).json({ status: 200, author: "Yudzxml", ...data });
-      }
-
-      if (detail) {
-        const data = await lk21.detail(url);
-        return res.status(200).json({ status: 200, author: "Yudzxml", ...data });
-      }
-
-      return res.status(400).json({
-        status: 400,
+      return res.status(200).json({ status: 200,
         author: "Yudzxml",
-        error: 'Gunakan query "search", "latest", atau "detail".'
+        data 
       });
     } catch (e) {
       return res.status(500).json({
