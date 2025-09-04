@@ -6,6 +6,7 @@ const BASE_URL_POSTER = "https://poster.lk21.party/wp-content/uploads";
 const lk21 = {
   latest: async function (page = 1) {
     const url = `${BASE_URL}/latest/page/${page}`;
+    try {
     const res = await fetch(url, {
       headers: {
         "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
@@ -43,8 +44,14 @@ const lk21 = {
     const totalPages = match ? parseInt(match[2]) : null;
 
     return { currentPage, totalPages, movies };
+  } catch (err) {
+    console.log(err)
+      return {
+        status: 500,
+        data: "Webnya mokad le klo ga domainya udh di ganti",
+      };
+    }
   },
-
   search: async function (query = "", page = 1) {
     try {
       const response = await fetch(
@@ -83,13 +90,13 @@ const lk21 = {
         data: modifiedData,
       };
     } catch (err) {
+      console.log(err)
       return {
         status: 404,
         data: "Movie gada lekk",
       };
     }
   },
-
   detail: async function (url) {
     if (!url) {
       return {
@@ -171,6 +178,7 @@ const lk21 = {
 
       return JSON.stringify(yudzxml, null, 2);
     } catch (err) {
+      console.log(err)
       return {
         status: 500,
         data: "Webnya mokad le klo ga domainya udh di ganti",
