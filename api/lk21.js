@@ -173,26 +173,26 @@ const lk21 = {
         });
       });
 
-      return {
-        status: 200,
-        data: {
-          title,
-          rating,
-          format,
-          resolution,
-          duration,
-          genres,
-          country,
-          director,
-          actors,
-          subtitle,
-          downloadLink,
-          synopsis,
-          poster,
-          trailer,
-          streamList,
-        },
-      };
+      return JSON.stringify({
+  status: 200,
+  data: {
+    title,
+    rating,
+    format,
+    resolution,
+    duration,
+    genres,
+    country,
+    director,
+    actors,
+    subtitle,
+    downloadLink,
+    synopsis,
+    poster,
+    trailer,
+    streamList,
+  },
+});
     } catch (err) {
       console.log(err);
       return {
