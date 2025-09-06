@@ -4,7 +4,7 @@ const APIKEYS = process.env.GOOGLE_API_KEYS
   ? process.env.GOOGLE_API_KEYS.split(',').map(k => k.trim())
   : []
 
-const PROMPT = 'Using the nano-banana model, a commercial 1/7 scale figurine of the character in the picture was created, depicting a realistic style and a realistic environment. The figurine is placed on a computer desk with a round transparent acrylic base. There is no text on the base. The computer screen shows the Zbrush modeling process of the figurine. Next to the computer screen is a BANDAI-style toy box with the original painting printed on it.'
+const PROMPT = 'A hyper-detailed 1/7 commercial figurine of the character from the photo, crafted with the nano-banana model. The figurine is showcased in a realistic studio-like environment, placed neatly on a modern computer desk. It stands on a glossy, transparent acrylic base without any text. On the computer screen, the ZBrush sculpting process of the figurine is displayed, adding authenticity to the scene. Beside the monitor, a premium BANDAI-style toy box is presented, featuring the official illustration artwork printed in high resolution. The overall lighting emphasizes a professional product shoot, with a cinematic and realistic atmosphere.'
 
 async function fetchImageBufferFromURL(url) {
   const response = await axios.get(url, { responseType: 'arraybuffer' })
