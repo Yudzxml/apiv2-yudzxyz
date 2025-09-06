@@ -10,7 +10,8 @@
     "axios": "^1.4.0",
     "qs": "^6.11.0",
     "cheerio": "^1.0.0-rc.12",
-    "jsdom": "^22.1.0"
+    "jsdom": "^22.1.0",
+    "@google/genai": "^1.17.0"
   },
   "author": "Yudzxml",
   "license": "MIT"
