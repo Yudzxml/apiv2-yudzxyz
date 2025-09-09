@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const anichin = {
   rekomendasi: async () => {
   try {
-    const { data: html } = await axios.get("https://anichin.moe/");
+    const { data: html } = await axios.get("https://anichin.watch/");
     const $ = cheerio.load(html);
     const animeList = [];
 
@@ -30,7 +30,7 @@ const anichin = {
 },
   popularToday: async () => {
     try {
-      const { data: html } = await axios.get('https://anichin.moe/');
+      const { data: html } = await axios.get('https://anichin.watch/');
       const $ = cheerio.load(html);
       const popularList = [];
       $('div.releases.hothome + div.listupd.normal article.bs').each((i, el) => {
@@ -61,7 +61,7 @@ const anichin = {
       params.append('ts_ac_query', query);
 
       const { data } = await axios.post(
-        'https://anichin.moe/wp-admin/admin-ajax.php',
+        'https://anichin.watch/wp-admin/admin-ajax.php',
         params.toString(),
         {
           headers: {
@@ -91,7 +91,7 @@ const anichin = {
   },
   latestRelease: async () => {
   try {
-    const { data: html } = await axios.get('https://anichin.moe/');
+    const { data: html } = await axios.get('https://anichin.watch/');
     const $ = cheerio.load(html);
 
     const latest = [];
@@ -220,7 +220,7 @@ const anichin = {
 },
   populerDonghua: async () => {
   try {
-    const { data: html } = await axios.get("https://anichin.moe/");
+    const { data: html } = await axios.get("https://anichin.watch/");
     const $ = cheerio.load(html);
 
     const result = {};
@@ -261,7 +261,7 @@ const anichin = {
 },
   getGenresFromLinks: async () => {
     try {
-      const { data: html } = await axios.get("https://anichin.moe/");
+      const { data: html } = await axios.get("https://anichin.watch/");
       const $ = cheerio.load(html);
       const genres = [];
       $('a[href*="/genres/"]').each((i, el) => {
@@ -285,7 +285,7 @@ const anichin = {
         return { error: `Genre "${genre}" tidak ditemukan. Pilih salah satu dari: ${validGenres.join(", ")}` };
       }
 
-      const url = `https://anichin.moe/genres/${genre}/page/${page}/`;
+      const url = `https://anichin.watch/genres/${genre}/page/${page}/`;
       const { data: html } = await axios.get(url);
       const $ = cheerio.load(html);
 
