@@ -236,9 +236,9 @@ const anichin = {
       const items = [];
 
       $(el).find("ul li").each((j, li) => {
-        const link = $(li).find(".imgseries a.series").attr("href") || null;
-        const title = $(li).find(".imgseries a.series img").attr("title") || null;
-        const img = $(li).find(".imgseries a.series img").attr("src") || null;
+        const link = $(li).find(".leftseries h4 a").attr("href") || null;
+        const title = $(li).find(".leftseries h4 a").text().trim() || null;
+        const img = $(li).find(".imgseries img").attr("src") || null;
 
         const genres = [];
         $(li).find(".leftseries span a").each((k, g) => {
@@ -253,6 +253,7 @@ const anichin = {
 
       result[range] = items.length ? items : [];
     });
+
     return JSON.parse(JSON.stringify(result));
   } catch (err) {
     console.error("Error fetching populerDonghua:", err);
