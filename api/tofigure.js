@@ -1,97 +1,91 @@
-const { GoogleGenAI } = require('@google/genai');
-const axios = require('axios');
-const mime = require('mime-types');
+const axios = require("axios");
 
-const APIKEYS = process.env.GOOGLE_API_KEYS
-  ? process.env.GOOGLE_API_KEYS.split(',').map(k => k.trim())
-  : [];
+const Keyyy =
+  "05120a7d-66b6-4973-b8c4-d3604f7087e7:baef4baa908c8010604ade6d3076274b";
 
-const PROMPT = 'Using the nano-banana model, a commercial 1/7 scale figurine of the character in the picture was created, depicting a realistic style and a realistic environment. The figurine is placed on a computer desk with a round transparent acrylic base. There is no text on the base. The computer screen shows the Zbrush modeling process of the figurine. Next to the computer screen is a BANDAI-style toy box with the original painting printed on it.';
+async function BananaEdit(
+  imageUrl,
+  prompt = "Using the nano-banana model, a commercial 1/7 scale figurine of the character in the picture was created, depicting a realistic style and a realistic environment. The figurine is placed on a computer desk with a round transparent acrylic base. There is no text on the base. The computer screen shows the Zbrush modeling process of the figurine. Next to the computer screen is a BANDAI-style toy box with the original painting printed on it."
+) {
+  try {
+    // Step 1: Kirim job ke fal-ai
+    const create = await axios.post(
+      "https://queue.fal.run/fal-ai/gemini-25-flash-image/edit",
+      {
+        prompt,
+        num_images: 1,
+        output_format: "jpeg",
+        image_urls: [imageUrl],
+      },
+      {
+        headers: {
+          Authorization: `Key ${Keyyy}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          "User-Agent": "@fal-ai/client/1.6.2",
+        },
+      }
+    );
 
-// --- Fungsi deteksi MIME dari buffer (magic number) ---
-function detectMimeFromBuffer(buffer) {
-  if (!buffer || buffer.length < 4) return null;
+    const { status_url: statusUrl, response_url: responseUrl } = create.data;
 
-  const hex = buffer.slice(0, 12).toString('hex').toUpperCase();
-
-  if (hex.startsWith('89504E47')) return 'image/png';          // PNG
-  if (hex.startsWith('FFD8FF')) return 'image/jpeg';           // JPEG
-  if (hex.startsWith('47494638')) return 'image/gif';          // GIF
-  if (hex.startsWith('52494646') && hex.includes('57454250')) return 'image/webp'; // WEBP
-  if (hex.startsWith('49492A00') || hex.startsWith('4D4D002A')) return 'image/tiff'; // TIFF
-  if (hex.startsWith('424D')) return 'image/bmp';              // BMP
-
-  return null; // fallback ke ekstensi
-}
-
-async function fetchImageBufferFromURL(url) {
-  const response = await axios.get(url, { responseType: 'arraybuffer' });
-  const buffer = Buffer.from(response.data);
-
-  // Cek urutan prioritas: header -> magic number -> ekstensi -> fallback PNG
-  const headerMime = response.headers['content-type'];
-  const magicMime = detectMimeFromBuffer(buffer);
-  const extMime = mime.lookup(url);
-
-  return {
-    buffer,
-    mime: headerMime || magicMime || extMime || 'image/png'
-  };
-}
-
-async function toFigureFromURL(imageUrl, customPrompt) {
-  if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
-    throw new Error('Input harus berupa URL gambar yang valid');
-  }
-
-  if (!APIKEYS.length) throw new Error('Tidak ada API key yang tersedia di environment variable');
-  const prompt = customPrompt && customPrompt.trim().length > 0 ? customPrompt : PROMPT;
-
-  const { buffer: imageBuffer, mime: inputMime } = await fetchImageBufferFromURL(imageUrl);
-  const base64Image = imageBuffer.toString('base64');
-
-  const contents = [
-    { text: prompt },
-    { inlineData: { data: base64Image, mimeType: inputMime } }
-  ];
-
-  let lastError;
-  for (const key of APIKEYS) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: key });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents
+    // Step 2: Polling status sampai COMPLETED
+    let status = "WAIT";
+    while (status !== "COMPLETED") {
+      const res = await axios.get(statusUrl, {
+        headers: { Authorization: `Key ${Keyyy}` },
       });
+      status = res.data.status;
 
-      const parts = response?.candidates?.[0]?.content?.parts || [];
-      for (const part of parts) {
-        if (part.inlineData?.data) {
-          const mimeType = part.inlineData?.mimeType || 'image/png';
-          return {
-            buffer: Buffer.from(part.inlineData.data, 'base64'),
-            mime: mimeType
-          };
-        }
+      if (status === "FAILED") {
+        throw new Error("❌ Proses gagal dijalankan oleh server.");
       }
 
-      lastError = new Error('Gagal mendapatkan gambar dari AI dengan key ini');
-    } catch (err) {
-      lastError = err;
-      continue;
+      if (status !== "COMPLETED") {
+        await new Promise((r) => setTimeout(r, 2000));
+      }
     }
+
+    // Step 3: Ambil hasil dari response URL
+    const result = await axios.get(responseUrl, {
+      headers: { Authorization: `Key ${Keyyy}` },
+    });
+
+    if (!result.data?.images?.length) {
+      throw new Error("Tidak ada hasil gambar dari API.");
+    }
+
+    const imageUrlOut = result.data.images[0].url;
+    const img = await axios.get(imageUrlOut, { responseType: "arraybuffer" });
+
+    return {
+      buffer: Buffer.from(img.data),
+      mime: "image/jpeg",
+    };
+  } catch (err) {
+    throw new Error(err.response?.data?.error || err.message);
   }
-  throw lastError;
 }
 
 module.exports = async (req, res) => {
   const { method } = req;
+  console.log(`[module.exports] Incoming request: ${method} ${req.url}`);
 
   const handleRequest = async (imageUrl, prompt) => {
-    if (!imageUrl) throw new Error('Parameter "url" wajib diisi.');
-    const { buffer, mime } = await toFigureFromURL(imageUrl, prompt);
+    console.log(
+      `[handleRequest] url=${imageUrl}, prompt=${
+        prompt ? prompt.substring(0, 50) + "..." : "(default)"
+      }`
+    );
 
-    res.setHeader('Content-Type', mime);
+    if (!imageUrl) throw new Error('Parameter "url" wajib diisi.');
+
+    const { buffer, mime } = await BananaEdit(imageUrl, prompt);
+    console.log(
+      `[handleRequest] Sending response with MIME: ${mime}, size=${buffer.length} bytes`
+    );
+
+    res.setHeader("Content-Type", mime);
     res.send(buffer);
   };
 
@@ -101,16 +95,22 @@ module.exports = async (req, res) => {
     if (method === "POST") {
       url = req.body.url;
       prompt = req.body.prompt;
+      console.log("[module.exports] Handling POST request");
       await handleRequest(url, prompt);
     } else if (method === "GET") {
       url = req.query.url;
-      prompt = req.query.prompt; 
+      prompt = req.query.prompt;
+      console.log("[module.exports] Handling GET request");
       await handleRequest(url, prompt);
     } else {
+      console.warn(`[module.exports] Method not allowed: ${method}`);
       res.setHeader("Allow", ["GET", "POST"]);
       return res.status(405).end(`Method ${method} Not Allowed`);
     }
   } catch (err) {
-    res.status(500).json({ status: 500, author: "Yudzxml", error: err.message });
+    console.error(`[module.exports] Final error: ${err.message}`);
+    res
+      .status(500)
+      .json({ status: 500, author: "Yudzxml", error: err.message });
   }
 };
