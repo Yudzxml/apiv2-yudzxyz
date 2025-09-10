@@ -93,7 +93,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET, OPTIONS');
     return res.status(405).json({
@@ -104,9 +105,8 @@ module.exports = async (req, res) => {
   }
 
   const { url } = req.query;
-  const input = url;
 
-  if (!input) {
+  if (!url) {
     return res.status(400).json({
       author: "Yudzxml",
       status: 400,
@@ -115,7 +115,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    let result = await downloadMusic(input);
+    let result = await downloadMusic(url);
 
     if (Buffer.isBuffer(result)) result = { buffer: result };
     if (!result.buffer) throw new Error("Buffer kosong dari downloadMusic");
@@ -125,7 +125,7 @@ module.exports = async (req, res) => {
 
     res.setHeader("Content-Type", mime);
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    return res.status(200).end(result.buffer);
+    return res.status(200).send(result.buffer);
 
   } catch (err) {
     return res.status(500).json({
