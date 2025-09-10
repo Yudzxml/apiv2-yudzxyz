@@ -16,7 +16,12 @@ function generateFileId() {
 
 async function getLinkDownload(trackUrl) {
   try {
-    const token = await generateFileId()
+    console.info("=== Mulai proses getLinkDownload ===");
+    console.info("URL track yang dikirim:", trackUrl);
+
+    const token = await generateFileId();
+    console.info("Token generated:", token);
+
     const form = new FormData();
     form.append('post_id', '25');
     form.append('form_id', '45dddc7');
@@ -25,6 +30,8 @@ async function getLinkDownload(trackUrl) {
     form.append('form_fields[music_url]', trackUrl);
     form.append('action', 'elementor_pro_forms_send_form');
     form.append('referrer', `https://spotidownloads.com/downloads/?file=${token}`);
+
+    console.info("Form data prepared:", Array.from(form.entries()));
 
     const response = await fetch('https://spotidownloads.com/wp-admin/admin-ajax.php', {
       method: 'POST',
@@ -46,13 +53,34 @@ async function getLinkDownload(trackUrl) {
       body: form
     });
 
+    console.info("Response status:", response.status, response.statusText);
+
     const resPonSe = await response.json();
+    console.info("Response JSON:", resPonSe);
+
+    if (!resPonSe?.data?.data?.["1"]?.redirect_url) {
+      throw new Error("Redirect URL tidak ditemukan dalam response.");
+    }
+
     const redirectUrl = resPonSe.data.data["1"].redirect_url;
+    console.info("Redirect URL:", redirectUrl);
+
     const afterEqual = redirectUrl.split('=').pop(); 
-    console.info("UUID: " + afterEqual)
-    return afterEqual;
+    console.info("Extracted UUID:", afterEqual);
+
+    return {
+      success: true,
+      token,
+      redirectUrl,
+      uuid: afterEqual,
+      rawResponse: resPonSe
+    };
   } catch (err) {
-    throw new Error(`Gagal request: ${err.message}`);
+    console.error("Terjadi error di getLinkDownload:", err);
+    return {
+      success: false,
+      error: err.message
+    };
   }
 }
 
