@@ -16,77 +16,61 @@ function generateFileId() {
 
 async function getLinkDownload(trackUrl) {
   try {
-    console.info("=== Mulai proses getLinkDownload ===");
-    console.info("URL track yang dikirim:", trackUrl);
-
     const token = await generateFileId();
-    console.info("Token generated:", token);
-
     const form = new FormData();
-    form.append('post_id', '25');
-    form.append('form_id', '45dddc7');
-    form.append('referer_title', 'Free Spotify Music Downloads - SpotiDownloads');
-    form.append('queried_id', '25');
-    form.append('form_fields[music_url]', trackUrl);
-    form.append('action', 'elementor_pro_forms_send_form');
-    form.append('referrer', `https://spotidownloads.com/downloads/?file=${token}`);
+    form.append("post_id", "25");
+    form.append("form_id", "45dddc7");
+    form.append("referer_title", "Free Spotify Music Downloads - SpotiDownloads");
+    form.append("queried_id", "25");
+    form.append("form_fields[music_url]", trackUrl);
+    form.append("action", "elementor_pro_forms_send_form");
+    form.append("referrer", `https://spotidownloads.com/downloads/?file=${token}`);
 
-    console.info("Form data prepared:", Array.from(form.entries()));
-
-    const response = await fetch('https://spotidownloads.com/wp-admin/admin-ajax.php', {
-      method: 'POST',
+    const response = await fetch("https://spotidownloads.com/wp-admin/admin-ajax.php", {
+      method: "POST",
       headers: {
-        'accept': 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
-        'cache-control': 'no-cache',
-        'pragma': 'no-cache',
-        'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
-        'sec-ch-ua-mobile': '?1',
-        'sec-ch-ua-platform': '"Android"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-origin',
-        'x-requested-with': 'XMLHttpRequest',
-        'referer': `https://spotidownloads.com/downloads/?file=${token}`,
-        'referrer-policy': 'strict-origin-when-cross-origin'
+        accept: "application/json, text/javascript, */*; q=0.01",
+        "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        "cache-control": "no-cache",
+        pragma: "no-cache",
+        "sec-ch-ua": '"Chromium";v="139", "Not;A=Brand";v="99"',
+        "sec-ch-ua-mobile": "?1",
+        "sec-ch-ua-platform": '"Android"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "x-requested-with": "XMLHttpRequest",
+        referer: `https://spotidownloads.com/downloads/?file=${token}`,
+        "referrer-policy": "strict-origin-when-cross-origin",
       },
-      body: form
+      body: form,
     });
 
-    console.info("Response status:", response.status, response.statusText);
+    // 🔥 Ambil cookies dari response header
+    const rawCookies = response.headers.raw()["set-cookie"];
+    const cookie = rawCookies && rawCookies.length > 0 
+  ? rawCookies[0].split(";")[0] 
+  : null;
 
     const resPonSe = await response.json();
-    console.info("Response JSON:", resPonSe);
-
-    if (!resPonSe?.data?.data?.["1"]?.redirect_url) {
-      throw new Error("Redirect URL tidak ditemukan dalam response.");
-    }
+    console.log("Response JSON:", JSON.stringify(resPonSe, null, 2));
 
     const redirectUrl = resPonSe.data.data["1"].redirect_url;
-    console.info("Redirect URL:", redirectUrl);
-
-    const afterEqual = redirectUrl.split('=').pop(); 
-    console.info("Extracted UUID:", afterEqual);
+    const afterEqual = redirectUrl.split("=").pop();
+    console.info("UUID: " + afterEqual);
 
     return {
-      success: true,
-      token,
-      redirectUrl,
       uuid: afterEqual,
-      rawResponse: resPonSe
+      cookie
     };
   } catch (err) {
-    console.error("Terjadi error di getLinkDownload:", err);
-    return {
-      success: false,
-      error: err.message
-    };
+    throw new Error(`Gagal request: ${err.message}`);
   }
 }
 
 async function downloadMusic(spoUrl) {
   if (!spoUrl) throw new Error("Spotify URL kosong");
-  const redirectUrl = await getLinkDownload(spoUrl);
+  const { uuid, cookie } = await getLinkDownload(spoUrl);
   const api = await (await fetch(`https://yydz.my.id/api/spotify?url=${spoUrl}`)).json();
   console.log("RESULT API: " + api)
   const resultSearch = api.data[0];
@@ -101,7 +85,8 @@ async function downloadMusic(spoUrl) {
     "sec-ch-ua": "\"Chromium\";v=\"139\", \"Not;A=Brand\";v=\"99\"",
     "sec-ch-ua-mobile": "?1",
     "sec-ch-ua-platform": "\"Android\"",
-    "Referer": `https://spotidownloads.com/download/?file=${redirectUrl}`,
+    "Referer": `https://spotidownloads.com/download/?file=${uuid}`,
+    "cookie": cookie,
     "Referrer-Policy": "strict-origin-when-cross-origin"
   };
 
