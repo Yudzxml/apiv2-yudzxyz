@@ -69,7 +69,14 @@ async function getLinkDownload(trackUrl) {
 async function downloadMusic(spoUrl) {
   if (!spoUrl) throw new Error("Spotify URL kosong");
   const { uuid, cookie } = await getLinkDownload(spoUrl);
-  const api = await (await fetch(`https://yydz.my.id/api/spotify?url=${spoUrl}`)).json();
+  const api = await (
+  await fetch(`https://yydz.my.id/api/spotify?url=${spoUrl}`, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Linux; Android 11; CPH2209) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36",
+      "Accept": "application/json"
+    }
+  })
+).json();
   console.log("RESULT API: " + api)
   const resultSearch = api.data[0];
   console.log("RESULT HASIL: " + resultSearch)
