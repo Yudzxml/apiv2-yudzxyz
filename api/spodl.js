@@ -47,10 +47,8 @@ async function getLinkDownload(trackUrl) {
     });
 
     // 🔥 Ambil cookies dari response header
-    const rawCookies = response.headers.raw()["set-cookie"];
-    const cookie = rawCookies && rawCookies.length > 0 
-  ? rawCookies[0].split(";")[0] 
-  : null;
+    const rawCookie = response.headers.get("set-cookie");
+    const cookie = rawCookie ? rawCookie.split(";")[0] : null;
 
     const resPonSe = await response.json();
     console.log("Response JSON:", JSON.stringify(resPonSe, null, 2));
