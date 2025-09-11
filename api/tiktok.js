@@ -2,6 +2,7 @@ const axios = require('axios');
 const qs = require('qs');
 const cheerio = require('cheerio');
 
+// Fungsi utama untuk download TikTok
 async function tikdownloader(tiktokUrl) {
   try {
     const postData = qs.stringify({ q: tiktokUrl, lang: 'id' });
@@ -13,7 +14,8 @@ async function tikdownloader(tiktokUrl) {
           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
           'Accept': '*/*',
           'X-Requested-With': 'XMLHttpRequest'
-        }
+        },
+        timeout: 15000
       }
     );
 
@@ -44,6 +46,7 @@ async function tikdownloader(tiktokUrl) {
   }
 }
 
+// Fallback API untuk info TikTok
 async function getTikTokInfo(url) {
   if (!url) return { success: false, message: 'URL TikTok tidak boleh kosong', raw: null };
   try {
@@ -67,21 +70,24 @@ async function getTikTokInfo(url) {
   }
 }
 
+// Export handler untuk Vercel / API endpoint
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+
   const { method } = req;
 
-  if (method === "GET") {
+  if (method === 'GET') {
     const { url } = req.query;
     if (!url) return res.status(400).json({ status: 400, author: "Yudzxml", error: 'Parameter "url" wajib diisi.' });
 
     try {
-      let links = await fetchTikTokLinks(url);
+      // Ambil data TikTok via tikdownloader
+      let links = await tikdownloader(url);
 
-      if (!links.downloads || links.downloads.length === 0) {
+      // Jika downloads kosong, fallback ke API lain
+      if ((!links.downloads || links.downloads.length === 0) && !links.error) {
         const infoFallback = await getTikTokInfo(url);
         if (infoFallback.success) {
           links.downloads = infoFallback.data.download || [];
@@ -96,6 +102,7 @@ module.exports = async (req, res) => {
         url,
         links
       });
+
     } catch (err) {
       return res.status(500).json({ status: 500, author: "Yudzxml", error: err.message });
     }
