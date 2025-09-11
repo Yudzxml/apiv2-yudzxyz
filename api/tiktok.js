@@ -2,7 +2,7 @@ const axios = require('axios');
 const qs = require('qs');
 const cheerio = require('cheerio');
 
-async function fetchTikTokLinks(tiktokUrl) {
+async function tikdownloader(tiktokUrl) {
   try {
     const postData = qs.stringify({ q: tiktokUrl, lang: 'id' });
     const response = await axios.post(
@@ -68,6 +68,10 @@ async function getTikTokInfo(url) {
 }
 
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
   const { method } = req;
 
   if (method === "GET") {
