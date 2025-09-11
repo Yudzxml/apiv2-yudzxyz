@@ -94,6 +94,10 @@ async function snapsave(url) {
 
 // --- API Handler ---
 module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
     if(req.method !== "GET") return res.status(405).json({ status: 405, message: `Method ${req.method} Not Allowed` });
 
     const { url } = req.query;
